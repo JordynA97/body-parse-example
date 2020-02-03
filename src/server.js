@@ -7,7 +7,29 @@ const jsonHandler = require('./jsonResponses.js');
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const handlePost = (request, response, parsedUrl) => {
+  if(parsedUrl.pathname === '/addUser'){
+    const body = [];
 
+    //if theres an issue give status 400 and end
+    request.on('error', (err) => {
+      console.dir(err);
+      response.statusCode = 400;
+      response.end();
+    });
+
+    request.on('data', (chunk) =>{
+      body.push(chunk);
+    });
+
+    request.on('end', () => {
+      //Buffer takes parts of an array and turns it into one variable on string
+      const bodyString = Buffer.concat(body).toString();
+      const bodyParams = query.parse(bodyString);
+      jsonHandler.addUser(request, response, bodyParams);
+    })
+
+
+  }
 };
 
 const handleGet = (request, response, parsedUrl) => {
@@ -23,7 +45,11 @@ const handleGet = (request, response, parsedUrl) => {
 const onRequest = (request, response) => {
   const parsedUrl = url.parse(request.url);
 
-
+  if(request.method === 'POST'){
+    handlePost(request, response, parsedUrl);
+  } else {
+    handleGet(request, response, parsedUrl);
+  }
 };
 
 http.createServer(onRequest).listen(port);
